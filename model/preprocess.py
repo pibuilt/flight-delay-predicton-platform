@@ -44,9 +44,14 @@ def select_features(df: pd.DataFrame) -> pd.DataFrame:
         "DEPARTURE_TIME",
         "DISTANCE",
         "DAY_OF_WEEK",
-        "delayed"
+        "delayed",
     ]
 
     df = df[columns]
+
+    # Ensure categorical columns are strings
+    df["AIRLINE"] = df["AIRLINE"].astype(str)
+    df["ORIGIN_AIRPORT"] = df["ORIGIN_AIRPORT"].astype(str)
+    df["DESTINATION_AIRPORT"] = df["DESTINATION_AIRPORT"].astype(str)
 
     return df
