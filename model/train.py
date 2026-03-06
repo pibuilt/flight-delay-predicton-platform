@@ -4,18 +4,17 @@ from preprocess import load_data, basic_cleaning, create_target, select_features
 from features import build_feature_pipeline
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.ensemble import RandomForestClassifier
+
 
 def main():
 
-    # Get project root
     root_dir = os.path.dirname(os.path.dirname(__file__))
     data_path = os.path.join(root_dir, "data", "flights.csv")
 
     df = load_data(data_path)
-
     print("Raw dataset shape:", df.shape)
 
     df = basic_cleaning(df)
@@ -24,8 +23,16 @@ def main():
 
     print("Processed dataset shape:", df.shape)
 
-    X = df.drop("delayed", axis=1)
-    y = df["delayed"]
+    print("Sampling dataset for faster experimentation...")
+
+    sample_size = 200000
+
+    df_sample = df.sample(n=sample_size, random_state=42)
+
+    print("Sample dataset shape:", df_sample.shape)
+
+    X = df_sample.drop("delayed", axis=1)
+    y = df_sample["delayed"]
 
     print("Splitting dataset...")
 
@@ -37,11 +44,19 @@ def main():
         stratify=y
     )
 
-    print("Building training pipeline...")
+    print("Building feature pipeline...")
 
     feature_pipeline = build_feature_pipeline()
 
-    model = LogisticRegression(max_iter=100)
+    model = RandomForestClassifier(
+        n_estimators=100,
+        max_depth=15,
+        min_samples_split=10,
+        min_samples_leaf=5,
+        class_weight="balanced",
+        random_state=42,
+        n_jobs=-1
+    )
 
     clf = Pipeline(
         steps=[
@@ -50,7 +65,7 @@ def main():
         ]
     )
 
-    print("Training Logistic Regression baseline...")
+    print("Training Random Forest model...")
 
     clf.fit(X_train, y_train)
 
@@ -61,7 +76,8 @@ def main():
     print("Accuracy:", accuracy_score(y_test, predictions))
 
     print("\nClassification Report:")
-    print(classification_report(y_test, predictions))
+    print(classification_report(y_test, predictions, zero_division=0))
+
 
 if __name__ == "__main__":
     main()
