@@ -1,0 +1,11 @@
+{
+    "accuracy": 0.615275,
+    "roc_auc": 0.6751123089169917,
+    "best_params": {
+        "model__n_estimators": 200,
+        "model__min_samples_split": 10,
+        "model__min_samples_leaf": 1,
+        "model__max_features": "sqrt",
+        "model__max_depth": 20
+    }
+}

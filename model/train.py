@@ -1,11 +1,18 @@
 import os
+import json
+
+import matplotlib
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from preprocess import load_data, basic_cleaning, create_target, select_features
 from features import build_feature_pipeline
 
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, StratifiedKFold, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -13,6 +20,9 @@ def main():
 
     root_dir = os.path.dirname(os.path.dirname(__file__))
     data_path = os.path.join(root_dir, "data", "flights.csv")
+
+    reports_dir = os.path.join(root_dir, "reports")
+    os.makedirs(reports_dir, exist_ok=True)
 
     df = load_data(data_path)
     print("Raw dataset shape:", df.shape)
@@ -96,11 +106,61 @@ def main():
     print("Generating predictions...")
 
     predictions = best_model.predict(X_test)
+    probabilities = best_model.predict_proba(X_test)[:, 1]
 
     print("Accuracy:", accuracy_score(y_test, predictions))
 
     print("\nClassification Report:")
     print(classification_report(y_test, predictions, zero_division=0))
+
+    cm = confusion_matrix(y_test, predictions)
+
+    plt.figure(figsize=(6,4))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+    plt.title("Confusion Matrix")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+
+    confusion_path = os.path.join(reports_dir, "confusion_matrix.png")
+    plt.savefig(confusion_path)
+    plt.close()
+
+    fpr, tpr, _ = roc_curve(y_test, probabilities)
+    roc_auc = roc_auc_score(y_test, probabilities)
+
+    plt.figure(figsize=(6,4))
+    plt.plot(fpr, tpr, label=f"AUC = {roc_auc:.3f}")
+    plt.plot([0,1], [0,1], linestyle="--")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve")
+    plt.legend()
+
+    roc_path = os.path.join(reports_dir, "roc_curve.png")
+    plt.savefig(roc_path)
+    plt.close()
+
+    model = best_model.named_steps["model"]
+    importances = model.feature_importances_
+
+    plt.figure(figsize=(10,6))
+    plt.hist(importances, bins=30)
+    plt.title("Feature Importance Distribution")
+
+    fi_path = os.path.join(reports_dir, "feature_importance.png")
+    plt.savefig(fi_path)
+    plt.close()
+
+    metrics = {
+    "accuracy": float(accuracy_score(y_test, predictions)),
+    "roc_auc": float(roc_auc),
+    "best_params": randomized_search.best_params_
+}
+
+    metrics_path = os.path.join(reports_dir, "metrics.json")
+
+    with open(metrics_path, "w") as f:
+        json.dump(metrics, f, indent=4)
 
 
 if __name__ == "__main__":
