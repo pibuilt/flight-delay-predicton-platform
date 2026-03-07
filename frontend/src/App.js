@@ -1,6 +1,388 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const AIRLINES = [
+  "AA",
+  "AS",
+  "B6",
+  "DL",
+  "EV",
+  "F9",
+  "HA",
+  "MQ",
+  "NK",
+  "OO",
+  "UA",
+  "US",
+  "VX",
+  "WN",
+];
+
+const AIRPORTS = [
+  "ABE",
+  "ABI",
+  "ABQ",
+  "ABR",
+  "ABY",
+  "ACK",
+  "ACT",
+  "ACV",
+  "ACY",
+  "ADK",
+  "ADQ",
+  "AEX",
+  "AGS",
+  "AKN",
+  "ALB",
+  "ALO",
+  "AMA",
+  "ANC",
+  "APN",
+  "ASE",
+  "ATL",
+  "ATW",
+  "AUS",
+  "AVL",
+  "AVP",
+  "AZO",
+  "BDL",
+  "BET",
+  "BFL",
+  "BGM",
+  "BGR",
+  "BHM",
+  "BIL",
+  "BIS",
+  "BJI",
+  "BLI",
+  "BMI",
+  "BNA",
+  "BOI",
+  "BOS",
+  "BPT",
+  "BQK",
+  "BQN",
+  "BRD",
+  "BRO",
+  "BRW",
+  "BTM",
+  "BTR",
+  "BTV",
+  "BUF",
+  "BUR",
+  "BWI",
+  "BZN",
+  "CAE",
+  "CAK",
+  "CDC",
+  "CDV",
+  "CEC",
+  "CHA",
+  "CHO",
+  "CHS",
+  "CID",
+  "CIU",
+  "CLD",
+  "CLE",
+  "CLL",
+  "CLT",
+  "CMH",
+  "CMI",
+  "CMX",
+  "CNY",
+  "COD",
+  "COS",
+  "COU",
+  "CPR",
+  "CRP",
+  "CRW",
+  "CSG",
+  "CVG",
+  "CWA",
+  "DAB",
+  "DAL",
+  "DAY",
+  "DBQ",
+  "DCA",
+  "DEN",
+  "DFW",
+  "DHN",
+  "DIK",
+  "DLG",
+  "DLH",
+  "DRO",
+  "DSM",
+  "DTW",
+  "DVL",
+  "EAU",
+  "ECP",
+  "EGE",
+  "EKO",
+  "ELM",
+  "ELP",
+  "ERI",
+  "ESC",
+  "EUG",
+  "EVV",
+  "EWN",
+  "EWR",
+  "EYW",
+  "FAI",
+  "FAR",
+  "FAT",
+  "FAY",
+  "FCA",
+  "FLG",
+  "FLL",
+  "FNT",
+  "FSD",
+  "FSM",
+  "FWA",
+  "GCC",
+  "GCK",
+  "GEG",
+  "GFK",
+  "GGG",
+  "GJT",
+  "GNV",
+  "GPT",
+  "GRB",
+  "GRI",
+  "GRK",
+  "GRR",
+  "GSO",
+  "GSP",
+  "GST",
+  "GTF",
+  "GTR",
+  "GUC",
+  "GUM",
+  "HDN",
+  "HIB",
+  "HLN",
+  "HNL",
+  "HOB",
+  "HOU",
+  "HPN",
+  "HRL",
+  "HSV",
+  "HYA",
+  "HYS",
+  "IAD",
+  "IAG",
+  "IAH",
+  "ICT",
+  "IDA",
+  "ILG",
+  "ILM",
+  "IMT",
+  "IND",
+  "INL",
+  "ISN",
+  "ISP",
+  "ITH",
+  "ITO",
+  "JAC",
+  "JAN",
+  "JAX",
+  "JFK",
+  "JLN",
+  "JMS",
+  "JNU",
+  "KOA",
+  "KTN",
+  "LAN",
+  "LAR",
+  "LAS",
+  "LAW",
+  "LAX",
+  "LBB",
+  "LBE",
+  "LCH",
+  "LEX",
+  "LFT",
+  "LGA",
+  "LGB",
+  "LIH",
+  "LIT",
+  "LNK",
+  "LRD",
+  "LSE",
+  "LWS",
+  "MAF",
+  "MBS",
+  "MCI",
+  "MCO",
+  "MDT",
+  "MDW",
+  "MEI",
+  "MEM",
+  "MFE",
+  "MFR",
+  "MGM",
+  "MHK",
+  "MHT",
+  "MIA",
+  "MKE",
+  "MKG",
+  "MLB",
+  "MLI",
+  "MLU",
+  "MMH",
+  "MOB",
+  "MOT",
+  "MQT",
+  "MRY",
+  "MSN",
+  "MSO",
+  "MSP",
+  "MSY",
+  "MTJ",
+  "MVY",
+  "MYR",
+  "OAJ",
+  "OAK",
+  "OGG",
+  "OKC",
+  "OMA",
+  "OME",
+  "ONT",
+  "ORD",
+  "ORF",
+  "ORH",
+  "OTH",
+  "OTZ",
+  "PAH",
+  "PBG",
+  "PBI",
+  "PDX",
+  "PHF",
+  "PHL",
+  "PHX",
+  "PIA",
+  "PIB",
+  "PIH",
+  "PIT",
+  "PLN",
+  "PNS",
+  "PPG",
+  "PSC",
+  "PSE",
+  "PSG",
+  "PSP",
+  "PUB",
+  "PVD",
+  "PWM",
+  "RAP",
+  "RDD",
+  "RDM",
+  "RDU",
+  "RHI",
+  "RIC",
+  "RKS",
+  "RNO",
+  "ROA",
+  "ROC",
+  "ROW",
+  "RST",
+  "RSW",
+  "SAF",
+  "SAN",
+  "SAT",
+  "SAV",
+  "SBA",
+  "SBN",
+  "SBP",
+  "SCC",
+  "SCE",
+  "SDF",
+  "SEA",
+  "SFO",
+  "SGF",
+  "SGU",
+  "SHV",
+  "SIT",
+  "SJC",
+  "SJT",
+  "SJU",
+  "SLC",
+  "SMF",
+  "SMX",
+  "SNA",
+  "SPI",
+  "SPS",
+  "SRQ",
+  "STC",
+  "STL",
+  "STT",
+  "STX",
+  "SUN",
+  "SUX",
+  "SWF",
+  "SYR",
+  "TLH",
+  "TOL",
+  "TPA",
+  "TRI",
+  "TTN",
+  "TUL",
+  "TUS",
+  "TVC",
+  "TWF",
+  "TXK",
+  "TYR",
+  "TYS",
+  "UST",
+  "VEL",
+  "VLD",
+  "VPS",
+  "WRG",
+  "WYS",
+  "XNA",
+  "YAK",
+  "YUM",
+];
+
+const DAYS = [
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+  { value: 7, label: "Sunday" },
+];
+
+const selectClass =
+  "border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white";
+
+const SelectField = ({ label, name, options, onChange }) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-sm font-medium text-gray-600">{label}</label>
+    <select
+      name={name}
+      onChange={onChange}
+      defaultValue=""
+      className={selectClass}
+    >
+      <option value="" disabled>
+        Select...
+      </option>
+      {options.map((opt) =>
+        typeof opt === "object" ? (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ) : (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ),
+      )}
+    </select>
+  </div>
+);
+
 const InputField = ({ label, name, placeholder, type = "text", onChange }) => (
   <div className="flex flex-col gap-1">
     <label className="text-sm font-medium text-gray-600">{label}</label>
@@ -82,31 +464,30 @@ function App() {
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
-              <InputField
+              <SelectField
                 label="Airline Code"
                 name="AIRLINE"
-                placeholder="e.g. AA"
+                options={AIRLINES}
                 onChange={handleChange}
               />
-              <InputField
+              <SelectField
                 label="Day of Week"
                 name="DAY_OF_WEEK"
-                placeholder="1 = Mon, 7 = Sun"
-                type="number"
+                options={DAYS}
                 onChange={handleChange}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <InputField
+              <SelectField
                 label="Origin Airport"
                 name="ORIGIN_AIRPORT"
-                placeholder="e.g. JFK"
+                options={AIRPORTS}
                 onChange={handleChange}
               />
-              <InputField
+              <SelectField
                 label="Destination Airport"
                 name="DESTINATION_AIRPORT"
-                placeholder="e.g. LAX"
+                options={AIRPORTS}
                 onChange={handleChange}
               />
             </div>
