@@ -1,0 +1,28 @@
+# ---------- Stage 1: Build dependencies ----------
+FROM python:3.11-slim AS builder
+
+WORKDIR /install
+
+COPY backend/requirements.txt .
+
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+
+# ---------- Stage 2: Runtime image ----------
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy installed dependencies from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
+COPY backend ./backend
+COPY model ./model
+COPY models ./models
+
+# Expose API port
+EXPOSE 8000
+
+# Start FastAPI
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
