@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+
 const AIRLINES = [
   "AA",
   "AS",
@@ -428,10 +430,7 @@ function App() {
     };
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/predict",
-        payload,
-      );
+      const response = await axios.post(`${API_URL}/predict`, payload);
       setResult(response.data);
     } catch (err) {
       console.error(err);
