@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.services.prediction_service import predict_flight_delay
 from backend.app.models.flight import FlightRequest as FlightData
@@ -24,5 +24,5 @@ def predict(input_data: FlightData):
     try:
         result = predict_flight_delay(input_data.model_dump())
         return {"success": True, "data": result}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Prediction failed")
