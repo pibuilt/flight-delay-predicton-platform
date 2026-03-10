@@ -218,11 +218,25 @@ pip install -r backend/requirements.txt
 pytest backend/tests
 ```
 
-Tests cover:
+To also see a line-by-line coverage report:
 
-- `GET /health` returns `{"status": "healthy"}`
-- `POST /predict` with valid input returns prediction + probability
-- `POST /predict` with missing fields returns HTTP 422
+```bash
+pytest backend/tests --cov=backend --cov-report=term-missing
+```
+
+Tests cover (9 total):
+
+| Test                                   | What it checks                                                              |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| `test_health_endpoint`                 | `GET /health` returns `{"status": "healthy"}`                               |
+| `test_predict_endpoint`                | `POST /predict` with valid input returns `prediction` + `delay_probability` |
+| `test_predict_with_mocked_model`       | Prediction works with a mocked model — no real model file needed            |
+| `test_predict_invalid_input`           | Missing fields returns HTTP 422                                             |
+| `test_boundary_day_of_week_zero`       | `DAY_OF_WEEK: 0` returns HTTP 422 (valid range is 1–7)                      |
+| `test_boundary_day_of_week_eight`      | `DAY_OF_WEEK: 8` returns HTTP 422                                           |
+| `test_boundary_departure_time_invalid` | `DEPARTURE_TIME: 2400` returns HTTP 422 (valid range is 0–2359)             |
+| `test_boundary_distance_negative`      | `DISTANCE: -1` returns HTTP 422 (must be ≥ 1)                               |
+| `test_unknown_airline`                 | `AIRLINE: "ZZ"` returns HTTP 422 (must be one of the 14 valid codes)        |
 
 ---
 
@@ -501,14 +515,16 @@ Run a flight delay prediction.
 }
 ```
 
-| Field                 | Type    | Description                                      |
-| --------------------- | ------- | ------------------------------------------------ |
-| `AIRLINE`             | string  | IATA airline code                                |
-| `ORIGIN_AIRPORT`      | string  | Departure airport IATA code                      |
-| `DESTINATION_AIRPORT` | string  | Arrival airport IATA code                        |
-| `DEPARTURE_TIME`      | integer | Scheduled departure (HHMM, e.g. `900` = 9:00 AM) |
-| `DISTANCE`            | integer | Distance in miles                                |
-| `DAY_OF_WEEK`         | integer | 1 (Monday) to 7 (Sunday)                         |
+| Field                 | Type    | Constraints                                         | Description                                      |
+| --------------------- | ------- | --------------------------------------------------- | ------------------------------------------------ |
+| `AIRLINE`             | string  | One of: `AA AS B6 DL EV F9 HA MQ NK OO UA US VX WN` | IATA airline code                                |
+| `ORIGIN_AIRPORT`      | string  | Exactly 3 characters                                | Departure airport IATA code                      |
+| `DESTINATION_AIRPORT` | string  | Exactly 3 characters                                | Arrival airport IATA code                        |
+| `DEPARTURE_TIME`      | integer | 0 – 2359                                            | Scheduled departure (HHMM, e.g. `900` = 9:00 AM) |
+| `DISTANCE`            | integer | ≥ 1                                                 | Distance in miles                                |
+| `DAY_OF_WEEK`         | integer | 1 – 7                                               | 1 (Monday) to 7 (Sunday)                         |
+
+> Validation is enforced by Pydantic on every request. A constraint violation returns **HTTP 422** with a detailed error body — no prediction is attempted. A server-side error during inference returns **HTTP 500**.
 
 **Response:**
 
@@ -549,7 +565,19 @@ If empty or default, rebuild the frontend image — the `Dockerfile.frontend` `C
 
 ### SSH timeout in GitHub Actions (`dial tcp: i/o timeout`)
 
-EC2 was likely stopped and restarted, giving it a new public IP. Update the `EC2_HOST` secret in GitHub → Settings → Secrets with the new IP. Allocate an Elastic IP in AWS to make the IP permanent.
+EC2 was likely stopped and restarted, giving it a new public IP.
+
+1. Get the new IP from the AWS EC2 console (Public IPv4 address).
+2. Update the `EC2_HOST` secret in GitHub → Settings → Secrets with the new IP.
+3. Update DuckDNS to point your domain at the new IP:
+
+```bash
+curl "https://www.duckdns.org/update?domains=YOUR_SUBDOMAIN&token=YOUR_DUCKDNS_TOKEN&ip=YOUR_NEW_EC2_IP"
+```
+
+If successful, DuckDNS responds with `OK`. Then push any commit (or `git commit --allow-empty -m "retrigger"`) to re-run the pipeline.
+
+To avoid this permanently, allocate an Elastic IP in AWS (EC2 → Elastic IPs → Allocate → Associate to Instance). It is free while the instance is running.
 
 ### Disk full on EC2
 
