@@ -31,5 +31,7 @@ jobs:
             sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
 
       - name: Update DuckDNS with current EC2 IP
-        run: |
-          curl -s "https://www.duckdns.org/update?domains=flight-predictor-pibuilt&token=${{ secrets.DUCKDNS_TOKEN }}&ip=${{ secrets.EC2_HOST }}"
+        env:
+          DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
+          EC2_IP: ${{ secrets.EC2_HOST }}
+        run: curl -s "https://www.duckdns.org/update?domains=flight-predictor-pibuilt&token=${DUCKDNS_TOKEN}&ip=${EC2_IP}"
