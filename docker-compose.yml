@@ -4,7 +4,7 @@ version: "3.9"
 # Both containers run on the same instance.
 # The backend is NOT exposed publicly — nginx on the frontend container
 # proxies /predict and /health to the backend over Docker's internal network.
-# Only port 3000 needs to be open in the EC2 Security Group.
+# Ports 80 and 443 must be open in the EC2 Security Group.
 
 services:
   backend:
@@ -23,6 +23,10 @@ services:
     container_name: flight-delay-frontend
     restart: unless-stopped
     ports:
-      - "3000:80" # Only public-facing port needed
+      - "80:80" # HTTP — ACME challenge + redirect to HTTPS
+      - "443:443" # HTTPS
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro # SSL certs (read-only)
+      - /var/www/certbot:/var/www/certbot:ro # ACME webroot for renewals
     depends_on:
       - backend
