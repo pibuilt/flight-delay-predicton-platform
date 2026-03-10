@@ -26,8 +26,6 @@ jobs:
             sudo docker system prune -af --volumes
             sudo docker-compose build --no-cache
             sudo docker-compose up -d
-            # Ensure certbot reload hook is in place so nginx picks up renewed certs automatically
             sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
-            echo '#!/bin/bash
-docker exec flight-delay-frontend nginx -s reload' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh > /dev/null
+            printf '#!/bin/bash\ndocker exec flight-delay-frontend nginx -s reload\n' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh > /dev/null
             sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
