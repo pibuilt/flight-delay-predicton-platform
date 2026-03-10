@@ -29,3 +29,13 @@ jobs:
             sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
             printf '#!/bin/bash\ndocker exec flight-delay-frontend nginx -s reload\n' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh > /dev/null
             sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+
+      - name: Update DuckDNS with current EC2 IP
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            CURRENT_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+            curl -s "https://www.duckdns.org/update?domains=flight-predictor-pibuilt&token=${{ secrets.DUCKDNS_TOKEN }}&ip=${CURRENT_IP}"
